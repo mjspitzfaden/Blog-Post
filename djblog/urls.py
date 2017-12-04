@@ -16,21 +16,31 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib import admin
 from djzen.urls import zen_url
+from blog.schema import read_schema, write_schema, \
+                        PrivateGraphQLView
 from graphene_django.views import GraphQLView
 from django.views.decorators.csrf import csrf_exempt
 import blog.views
 
 urlpatterns = [
     zen_url('admin/', admin.site.urls),
-    zen_url('graphql', csrf_exempt(
-    GraphQLView.as_view(graphiql=True)
-    )
-  ),
+    zen_url('accounts/', include('django.contrib.auth.urls')),
+    
     zen_url('posts/<slug>', blog.views.post_list),
     zen_url('api-auth/',
        include(
         'rest_framework.urls',
         namespace='rest_framework'
       )
-     )
+     ),
+    zen_url('graphql-authed', csrf_exempt(
+    PrivateGraphQLView.as_view(
+      graphiql=True, schema=write_schema
+    ))
+  ),
+  zen_url('graphql', csrf_exempt(
+    GraphQLView.as_view(
+      graphiql=True, schema=read_schema
+    ))
+  ),
 ]
